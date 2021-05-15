@@ -27,10 +27,10 @@ public:
     static void *allocate(size_t n);
 
     // 一级空间配置器直接使用free
-    static void dellocate(void *p, size_t);
+    static void dellocate(void *p);
 
     // 一级空间配置器直接使用realloc
-    static void *reallocate(void *p, size_t, size_t new_size);
+    static void *reallocate(void *p, size_t new_size);
 
     // 参数是一个函数指针，可以指定自己的oom-handler
     static void (*set_malloc_handler(void (*f)()))()
@@ -180,13 +180,13 @@ void *malloc_alloc_template<inst>::allocate(size_t n)
 }
 
 template <int inst>
-void malloc_alloc_template<inst>::dellocate(void *p, size_t)
+void malloc_alloc_template<inst>::dellocate(void *p)
 {
     free(p);
 }
 
 template <int inst>
-void *malloc_alloc_template<inst>::reallocate(void *p, size_t, size_t new_size)
+void *malloc_alloc_template<inst>::reallocate(void *p, size_t new_size)
 {
     void *result = realloc(p, new_size);
     if (result == 0)
@@ -201,13 +201,13 @@ template <typename T>
 size_t myAllocator<T>::roundUp(size_t bytes)
 {
     // +7在把二进制表示的后三位置位0
-    return (((bytes) + (size_t)ALIGN - 1) / (size_t)ALIGN - 1);
+    return (((bytes) + (size_t)ALIGN - 1) & ~(size_t)ALIGN - 1);
 }
 
 template <typename T>
 size_t myAllocator<T>::freeListIndex(size_t bytes)
 {
-    return (((bytes) + (size_t)ALIGN - 1) & (size_t)ALIGN - 1);
+    return (((bytes) + (size_t)ALIGN - 1) / (size_t)ALIGN - 1);
 }
 
 template <typename T>
@@ -355,7 +355,7 @@ void myAllocator<T>::deallocate(void *p, size_t n)
     if (n > (size_t)MAX_CHUNK)
     {
         // 大于最大chunk，直接带哦用一级空间配置器
-        malloc_alloc::dellocate(p, n);
+        malloc_alloc::dellocate(p);
     }
     else
     {

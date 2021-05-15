@@ -6,7 +6,7 @@ int main()
 {
     vector<int, myAllocator<int>> vec;
     cout << "construct suscess" << endl;
-    for (int i = 0; i < 100; ++i)
+    for (int i = 0; i < 5; ++i)
     {
         vec.push_back(1);
     }
